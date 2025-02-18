@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block title %}Lista de alumnos{% endblock %}
+
+{% block content %}
+
+<a href="{{ url_for('create_alumno') }}" class="btn btn-success mb-3">Agregar alumno</a>
+<h1>TEST</h1>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>No. control</th>
+            <th>Nombre</th>
+            <th>Apellido paterno</th>
+            <th>Apellido materno</th>
+            <th>Semestre</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for alumno in alumnos %}
+        <tr>
+            <td>{{ alumno.no_control }}</td>
+            <td>{{ alumno.nombre }}</td>
+            <td>{{ alumno.ap_paterno }}</td>
+            <td>{{ alumno.ap_materno }}</td>
+            <td>{{ alumno.semestre }}</td>
+            <td>
+                <a href="{{url_for('delete_alumno', no_control = alumno.no_control)}}" class="btn btn-danger">Eliminar</a>
+                <a href="{{url_for('update_alumno', no_control = alumno.no_control)}}" class="btn btn-warnig">Actualizar</a>
+
+            </td>
+        </tr>
+        {% else %}
+        <tr>
+            <td colspan="5">No hay alumnos registrados</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

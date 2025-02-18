@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block title %} Actualizar Alumno{% endblock %}
+{% block content %}
+<h3>Agregar alumno</h3>
+
+<form action="{{ url_for('update_alumno', no_control=alumno.no_control) }}" method="POST">
+        <input type="hidden" name="no_control" value="{{ alumno.no_control }}">
+
+    <div class="form-group mb-3">
+        <label for="nombre">Nombre</label>
+        <input type="text" class="form-control" id="nombre" name="nombre" value="{{alumno.nombre}}" required>
+    </div>
+
+    <div class="form-group mb-3">
+        <label for="ap_paterno">Apellido paterno</label>
+        <input type="text" class="form-control" id="ap_paterno" name="ap_paterno" value="{{alumno.ap_paterno}}" required>
+    </div>
+
+    <div class="form-group mb-3">
+        <label for="ap_materno">Apellido Materno</label>
+        <input type="text" class="form-control" id="ap_materno" name="ap_materno" value="{{alumno.ap_materno}}" required>
+    </div>
+
+    <div class="form-group mb-3">
+        <label for="semestre">Semestre</label>
+        <input type="text" class="form-control" id="semestre" name="semestre" value="{{alumno.semestre}}" required>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Actualizar</button>
+    <a href="{{ url_for('index') }}" class="btn btn-danger">Cancelar</a>
+</form>
+
+
+{% endblock %}
