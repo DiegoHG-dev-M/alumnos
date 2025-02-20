@@ -3,3 +3,5 @@ bin/
 lib/
 pyvenv.cfg
 Scripts/
+
+.env/
