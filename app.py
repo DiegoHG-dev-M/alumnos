@@ -16,6 +16,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 
+
 #Modelo de la base de datos
 class Alumno(db.Model):
     __tablename__ = 'alumnos'
@@ -25,73 +26,106 @@ class Alumno(db.Model):
     ap_materno = db.Column(db.String)
     semestre = db.Column(db.String)
 
-    def to_dict(self):
-        return{
-            'no_control': self.no_control,
-            'nombre': self.nombre,
-            'ap_paterno': self.ap_paterno,
-            'ap_materno': self.ap_materno,
-            'semestre': self.semestre,
-        } 
 
-
-#Ruta alumnos
-@app.route('/') 
-def index():
+#endpoint para obtener todos los alumnos
+@app.route('/alumnos', methods=['GET'])
+def get_alumnos():
     alumnos = Alumno.query.all()
-    return render_template('index.html',alumnos = alumnos)
+    lista_alumnos = []
+    for alumno in alumnos:
+        lista_alumnos.append({
+         'no_control': alumno.no_control,
+         'nombre': alumno.no_control,
+         'ap_paterno': alumno.ap_paterno,
+         'ap_materno': alumno.ap_materno,
+         'semestre': alumno.semestre
+
+        })
+    return jsonify(lista_alumnos)
 
 
-@app.route('/alumnos/new', methods=['GET','POST']) 
-def create_alumno():
-    if request.method == 'POST':
-        #Agregar alumno
-        no_control = request.form['no_control']
-        nombre = request.form['nombre']
-        ap_paterno = request.form['ap_paterno']
-        ap_materno = request.form['ap_materno']
-        semestre = request.form['semestre']
+#endpoint para agregar nuevo alumno
+@app.route('/alumnos', methods=['POST'])
+def insert_alumno():
+    data = request.get_json()
+    nuevo_alumno = Alumno(
+        no_control = data['no_control'],
+        nombre = data['nombre'],
+        ap_paterno = data['ap_paterno'],
+        ap_materno = data['ap_materno'],
+        semestre = data['semestre'],
+    )
 
-        nvo_alumno = Alumno(no_control=no_control, nombre=nombre, ap_paterno=ap_paterno, ap_materno=ap_materno, semestre=semestre)
-        db.session.add(nvo_alumno)
-        db.session.commit()
-        return redirect(url_for('index'))
-    #Aqui sigue si es GET
+    db.session.add(nuevo_alumno)
+    db.session.commit()
+    return jsonify({'msg':'Alumno agregado correctamente'})
+    
+#endpoint para obtener un alumno por el no_control
+@app.route('/alumnos/<no_control>', methods=['GET'])
+def get_alumno(no_control):
+    alumno = Alumno.query.get(no_control)
+    if alumno is None:
+        return jsonify ({'msg':'Alumno no encontrado'})
+    return jsonify({
+        'no_control': alumno.no_control,
+        'nombre': alumno.nombre,
+        'ap_paterno': alumno.ap_paterno,
+        'ap_materno': alumno.ap_materno,
+        'semestre': alumno.semestre,
+    })
 
-
-    return render_template('create_alumno.html')
-
-#Eliminar alumno
-@app.route('/alumnos/delete/<int:no_control>')
+#endpoint para eliminar alumno
+@app.route('/alumnos/<no_control>', methods=['GET'])
 def delete_alumno(no_control):
     alumno = Alumno.query.get(no_control)
-    if alumno:
-        db.session.delete(alumno)
-        db.session.commit()
-    return redirect(url_for('index'))
+    if alumno is None:
+        return jsonify ({'msg':'Alumno no encontrado'})
+    db.session.delete(alumno)
+    db.session.commit()
+    return jsonify({'msg':'Alumno eliminado correctamente'})
 
-#Actualizar alumnos
-@app.route('/alumnos/update_alumno/<int:no_control>', methods=['GET','POST'])
+#endpoint para actualizar alumno
+@app.route('/alumnos/<no_control>', methods=['PATCH'])
 def update_alumno(no_control):
     alumno = Alumno.query.get(no_control)
+    if alumno is None:
+        return jsonify ({'msg':'Alumno no endontrado'})
+    data = request.get_json()
 
-    if request.method == 'POST':
-        #Agregar alumno
-        
-        alumno.nombre = request.form['nombre']
-        alumno.ap_paterno = request.form['ap_paterno']
-        alumno.ap_materno = request.form['ap_materno']
-        alumno.semestre = request.form['semestre']
-        db.session.commit()
-        return redirect(url_for('index'))
-    return render_template('update_alumno.html', alumno=alumno)
+    if "nombre" in data:
+        alumno.nombre = data['nombre']
+    if "ap_paterno" in data:
+        alumno.ap_paterno = data['ap_paterno']
+    if "ap_materno" in data:
+        alumno.ap_materno = data['ap_materno']
+    if "semestre" in data:
+        alumno.semestre = data['semestre']
 
-#Ruta alumnos
-#@app.route('/alumnos') 
-#def alumnos():
- #    #return 'Hola Mundo'
-  #  return render_template('index.html')
+    db.session.commit()
+    return jsonify ({ 'msg':'Alumno actualizado correctamente'})
 
+# Endpoint para actualizar completamente un alumno
+@app.route('/alumnos/<no_control>', methods=['PUT'])
+def update_alumno_completo(no_control):
+    alumno = Alumno.query.get(no_control)
+    if alumno is None:
+        return jsonify({'msg': 'Alumno no encontrado'}), 404
 
-if __name__ == '__main__':
+    data = request.get_json()
+
+    # Verificar que todos los campos necesarios estén en la solicitud
+    campos_requeridos = {"nombre", "ap_paterno", "ap_materno", "semestre"}
+    if not campos_requeridos.issubset(data.keys()):
+        return jsonify({'msg': 'Faltan campos requeridos'}), 400
+
+    # Actualizar todos los datos del alumno
+    alumno.nombre = data['nombre']
+    alumno.ap_paterno = data['ap_paterno']
+    alumno.ap_materno = data['ap_materno']
+    alumno.semestre = data['semestre']
+
+    db.session.commit()
+    return jsonify({'msg': 'Alumno actualizado correctamente'})
+
+if __name__ == '__Main__':
     app.run(debug=True)
